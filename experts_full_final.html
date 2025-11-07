@@ -1,0 +1,161 @@
+
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>지역 누수 전문가</title>
+<style>
+  :root{--bg:#0b1550;--fg:#fff;--muted:#a7b7ff;--cta:#e23b3b;--line:rgba(255,255,255,.14);--panel:rgba(255,255,255,.06)}
+  *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,'Malgun Gothic',sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:24px 16px 80px}
+  h1{margin:0 0 6px;font-size:28px;font-weight:900}
+  .sub{color:var(--muted);margin-bottom:14px}
+  .tool{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+  .select,.input{background:rgba(255,255,255,.08);border:1px solid var(--line);color:#fff;border-radius:10px;padding:10px 12px;font-size:14px}
+  .btn{background:var(--cta);border:none;color:#fff;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer}
+  .btn.secondary{background:rgba(255,255,255,.12)}
+  select,option{background-color:#0b1550;color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .card h3{margin:0 0 6px;font-size:18px;font-weight:900}
+  .meta{font-size:12px;opacity:.9;margin-bottom:8px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .badge{display:inline-block;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.1);font-size:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin:2px 0}
+  .row b{opacity:.9}
+  .cta{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .cta a{display:inline-block;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.12);text-decoration:none;font-weight:800;color:#fff}
+  .empty{margin:24px 0;padding:16px;border:1px dashed var(--line);border-radius:12px;text-align:center}
+  .beta{margin-top:22px;padding:12px;border-radius:10px;background:transparent;border:1px solid var(--line);font-size:14px;line-height:1.6}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="title">지역 누수 전문가</h1>
+    <div class="sub" id="subtitle">지역을 선택하거나 검색해 보세요.</div>
+
+    <div class="tool">
+      <select id="selProvince" class="select" aria-label="광역 선택">
+        <option value="">광역 전체</option>
+      </select>
+      <input id="inpCity" class="input" placeholder="시/구 검색 (예: 대전, 강서, 제주시)">
+      <input id="inpQuery" class="input" placeholder="상호/주소/장비 검색">
+      <button class="btn" id="btnFilter">검색</button>
+      <button class="btn secondary" id="btnReset">초기화</button>
+    </div>
+
+    <div id="list" class="grid" aria-live="polite"></div>
+    <div id="empty" class="empty" style="display:none">아직 등록된 업체가 없습니다.</div>
+
+    <div class="beta">
+      <b>베타 운영 안내</b><br>
+      본 서비스는 <b>2026년 6월</b>까지 시범(Beta) 운영 중입니다. 공개된 사업자 정보를 기반으로 임시 등록되어 있으며,
+      업체 요청 시 정보는 즉시 수정·삭제됩니다. 본 서비스는 광고/유료 노출을 제공하지 않습니다.
+    </div>
+  </div>
+
+<script>
+  const DATA = {items: [{"name": "성광설비", "province": "울산", "province_slug": "ulsan", "city": "", "district": "중구", "region_label": "울산 중구", "address": "울산 중구 구루미2길 51 울산누수달인성광설비", "phone1": "", "phone2": "0507-1337-8097", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "제주누수탐지공사", "province": "제주", "province_slug": "jeju", "city": "", "district": "제주시", "region_label": "제주 제주시", "address": "제주 제주시 구남동4길 27-1 102호", "phone1": "", "phone2": "0507-1306-1046", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "에이스설비 누수탐지", "province": "강원", "province_slug": "gangwon", "city": "", "district": "원주시", "region_label": "강원 원주시", "address": "강원 원주시 오성마을길 63-25 201동 239호", "phone1": "010-6777-5510", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기", "고압세척기"]}, {"name": "오케이종합설비", "province": "대전", "province_slug": "daejeon", "city": "", "district": "중구", "region_label": "대전 중구", "address": "대전 중구 계백로1618번길 69 1층102호", "phone1": "010-5402-9530", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "경원엔지니어링", "province": "부산", "province_slug": "busan", "city": "", "district": "동래구", "region_label": "부산 동래구", "address": "부산 동래구 명안로25번길 64", "phone1": "010-6700-2976", "phone2": "", "hours": "08:00", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기", "고압세척기"]}, {"name": "누수방수연구소", "province": "부산", "province_slug": "busan", "city": "", "district": "사상구", "region_label": "부산 사상구", "address": "부산 사상구 가야대로344번길 11-15", "phone1": "", "phone2": "0507-1399-0949", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기", "고압세척기"]}, {"name": "코리아누수설비", "province": "부산", "province_slug": "busan", "city": "", "district": "부산진구", "region_label": "부산 부산진구", "address": "부산 부산진구 백양관문로77번길 99 상가동 106호", "phone1": "010-9477-8144", "phone2": "051-898-3535", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "바른종합설비", "province": "서울", "province_slug": "seoul", "city": "", "district": "강서구", "region_label": "서울 강서구", "address": "서울 강서구 강서로 493 3층", "phone1": "", "phone2": "0504-1363-6993", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기", "고압세척기"]}, {"name": "삼원누수탐지센터", "province": "서울", "province_slug": "seoul", "city": "", "district": "성북구", "region_label": "서울 성북구", "address": "서울 성북구 보국문로 95 2층 248호", "phone1": "010-3639-2857", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기", "고압세척기"]}, {"name": "파인드누수", "province": "충남", "province_slug": "chungnam", "city": "천안시", "district": "서북구", "region_label": "충남 천안시 서북구", "address": "충남 천안시 서북구 월봉3길 23", "phone1": "010-2201-8962", "phone2": "", "hours": "08:00", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "짱가누수", "province": "충남", "province_slug": "chungnam", "city": "", "district": "아산시", "region_label": "충남 아산시", "address": "충남 아산시 신창면 온천대로 984", "phone1": "010-2048-1017", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "태성ENG", "province": "광주", "province_slug": "gwangju", "city": "", "district": "서구", "region_label": "광주 서구", "address": "광주 서구 월드컵4강로197번길 12", "phone1": "", "phone2": "0507-1479-0597", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "탑누수설비", "province": "광주", "province_slug": "gwangju", "city": "", "district": "동구", "region_label": "광주 동구", "address": "광주 동구 경양로 317", "phone1": "", "phone2": "0507-1475-0640", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "현대누수공사", "province": "대구", "province_slug": "daegu", "city": "", "district": "동구", "region_label": "대구 동구", "address": "대구 동구 화랑로69길 35", "phone1": "010-2762-8272", "phone2": "", "hours": "08:00", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "상원설비", "province": "대구", "province_slug": "daegu", "city": "", "district": "달서구", "region_label": "대구 달서구", "address": "대구 달서구 달구벌대로 1657", "phone1": "", "phone2": "053-654-2161", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "인천수도설비", "province": "인천", "province_slug": "incheon", "city": "", "district": "남동구", "region_label": "인천 남동구", "address": "인천 남동구 구월말로58번길 15-22 101호", "phone1": "010-3732-9808", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기", "고압세척기"]}, {"name": "삼성누수탐지", "province": "인천", "province_slug": "incheon", "city": "", "district": "미추홀구", "region_label": "인천 미추홀구", "address": "인천 미추홀구 인하로 185 2층 1호", "phone1": "010-5316-0158", "phone2": "", "hours": "08:00", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "종합수도설비", "province": "세종", "province_slug": "sejong", "city": "", "district": "조치원읍", "region_label": "세종 조치원읍", "address": "세종 조치원읍 으뜸길 136", "phone1": "010-2350-1304", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "하나누수탐지공사", "province": "충북", "province_slug": "chungbuk", "city": "청주시", "district": "상당구", "region_label": "충북 청주시 상당구", "address": "충북 청주시 상당구 무농정로 103", "phone1": "", "phone2": "0507-1312-0976", "hours": "08:00", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "제일누수탐지방수공사", "province": "전북", "province_slug": "jeonbuk", "city": "전주시", "district": "완산구", "region_label": "전북 전주시 완산구", "address": "전북 전주시 완산구 서원로 313", "phone1": "010-6376-6029", "phone2": "063-283-9204", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "다온누수", "province": "전북", "province_slug": "jeonbuk", "city": "전주시", "district": "덕진구", "region_label": "전북 전주시 덕진구", "address": "전북 전주시 덕진구 거북바우로 112 다온누수", "phone1": "010-5048-9282", "phone2": "0507-1497-9285", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "누수1번지", "province": "광주", "province_slug": "gwangju", "city": "", "district": "남구", "region_label": "광주 남구", "address": "광주 남구 군분로33번길 37-1", "phone1": "", "phone2": "0507-1442-8204", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "우리집누수닥터", "province": "광주", "province_slug": "gwangju", "city": "", "district": "남구", "region_label": "광주 남구", "address": "광주 남구 월광길 38-1", "phone1": "", "phone2": "0507-1426-0348", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "경북누수", "province": "경북", "province_slug": "gyeongbuk", "city": "", "district": "구미시", "region_label": "경북 구미시", "address": "경북 구미시 상사서로25길 9-6", "phone1": "010-3549-7581", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "금오종합설비", "province": "경북", "province_slug": "gyeongbuk", "city": "", "district": "구미시", "region_label": "경북 구미시", "address": "경북 김천시 모암사랑1길 14 1층", "phone1": "010-3302-1891", "phone2": "", "hours": "08:00", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "슈타크누수", "province": "경남", "province_slug": "gyeongnam", "city": "", "district": "진주시", "region_label": "경남 진주시", "address": "경남 진주시 비봉로24번길 4 누수", "phone1": "", "phone2": "0507-1368-1286", "hours": "08:00", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "지원종합설비", "province": "경남", "province_slug": "gyeongnam", "city": "", "district": "창원시", "region_label": "경남 창원시", "address": "경남 창원시 마산합포구 진동면 신서촌3길 57 101호", "phone1": "", "phone2": "0507-1440-0892", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "종합설비해결사", "province": "경기", "province_slug": "gyeonggi", "city": "", "district": "안산시", "region_label": "경기 안산시", "address": "안산시 이동 644-5 1층", "phone1": "", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "원누수탐지", "province": "경기", "province_slug": "gyeonggi", "city": "", "district": "시흥시", "region_label": "경기 시흥시", "address": "경기 시흥시 인선길 109 106호", "phone1": "010-3392-8332", "phone2": "", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}, {"name": "미담누수", "province": "경기", "province_slug": "gyeonggi", "city": "", "district": "안성시", "region_label": "경기 안성시", "address": "경기 안성시 공도읍 상마정앞길 23-9 101호 미담누수", "phone1": "", "phone2": "0507-1382-5835", "hours": "정보 준비중", "services": ["누수탐지"], "equipments": ["열화상카메라", "내시경카메라", "가스탐지기"]}] };
+
+  const PROVINCES = {
+    "seoul":"서울","gyeonggi":"경기","incheon":"인천","busan":"부산",
+    "daejeon":"대전","daegu":"대구","gwangju":"광주","ulsan":"울산","sejong":"세종",
+    "gangwon":"강원","chungbuk":"충북","chungnam":"충남","jeonbuk":"전북","jeonnam":"전남",
+    "gyeongbuk":"경북","gyeongnam":"경남","jeju":"제주"
+  };
+
+  const K2S = {
+    "서울":"seoul","경기":"gyeonggi","인천":"incheon","부산":"busan","대구":"daegu",
+    "광주":"gwangju","대전":"daejeon","울산":"ulsan","세종":"sejong","강원":"gangwon",
+    "충북":"chungbuk","충남":"chungnam","전북":"jeonbuk","전남":"jeonnam",
+    "경북":"gyeongbuk","경남":"gyeongnam","제주":"jeju"
+  };
+
+  const sel = document.getElementById('selProvince');
+  Object.entries(PROVINCES).forEach(([slug,label])=>{ const o=document.createElement('option'); o.value=slug; o.textContent=label; sel.appendChild(o); });
+
+  const params = new URLSearchParams(location.search);
+  let regionParam = params.get('region');
+  const cityParam = params.get('city');
+  const qParam = params.get('q');
+
+  if (regionParam){
+    regionParam = decodeURIComponent(regionParam);
+    if (!PROVINCES[regionParam] && K2S[regionParam]) regionParam = K2S[regionParam];
+    const provSlug = regionParam.split('-')[0];
+    if (PROVINCES[provSlug]) sel.value = provSlug;
+    document.getElementById('title').textContent = (PROVINCES[provSlug] || "지역") + " 누수 전문가";
+    document.getElementById('subtitle').textContent = "필요하면 시/구 또는 검색어로 더 좁혀보세요.";
+  }
+  if (cityParam) document.getElementById('inpCity').value = decodeURIComponent(cityParam);
+  if (qParam) document.getElementById('inpQuery').value = decodeURIComponent(qParam);
+
+  function normalizeProvinceInput(text){
+    const t = (text||'').trim();
+    if (K2S[t]) return K2S[t];
+    const rev = Object.fromEntries(Object.entries(PROVINCES).map(([k,v])=>[v,k]));
+    return rev[t] || "";
+  }
+
+  function match(item, provSlug, cityQuery, textQuery){
+    if (!provSlug && cityQuery){
+      const maybe = normalizeProvinceInput(cityQuery);
+      if (maybe) provSlug = maybe;
+    }
+    if (provSlug && item.province_slug !== provSlug) return false;
+    if (cityQuery){
+      const q = cityQuery.toLowerCase();
+      const provinceName = PROVINCES[item.province_slug] || (item.province || '');
+      const hay = (item.city + " " + item.district + " " + provinceName).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (textQuery){
+      const q = textQuery.toLowerCase();
+      const hay = [item.name, item.address, item.region_label].concat(item.services||[], item.equipments||[]).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  }
+
+  function render(){
+    let provSlug = sel.value;
+    const cityQuery = document.getElementById('inpCity').value.trim();
+    const textQuery = document.getElementById('inpQuery').value.trim();
+    const list = document.getElementById('list');
+    list.innerHTML="";
+    let count=0;
+    DATA.items.forEach(item=>{
+      if(!match(item,provSlug,cityQuery,textQuery)) return;
+      count++;
+      const phoneLabel = (item.phone1 || item.phone2 || "").replaceAll("-","");
+      const div = document.createElement('div');
+      div.className='card';
+      div.innerHTML = [
+        '<h3>'+ (item.name || '상호명 확인중') +'</h3>',
+        '<div class="meta">'+ (item.region_label || '') +'</div>',
+        '<div class="badges">'+
+          (item.services||[]).map(s=>'<span class="badge">'+s+'</span>').join("")+
+          (item.equipments||[]).map(s=>'<span class="badge">'+s+'</span>').join("")+
+        '</div>',
+        '<div class="row"><b>주소</b> '+ (item.address||'') +'</div>',
+        '<div class="row"><b>연락처</b> '+ (item.phone1||'') + (item.phone2? ' / '+item.phone2 : '') +'</div>',
+        '<div class="row"><b>운영시간</b> '+ (item.hours||'정보 준비중') +'</div>',
+        '<div class="cta">',
+          (phoneLabel ? '<a href="tel:'+phoneLabel+'" aria-label="전화 걸기">전화 문의</a>' : ''),
+          '<a href="/experts/request?prefill='+ encodeURIComponent(item.name) +'" aria-label="정보 수정 요청">정보 수정요청</a>',
+        '</div>'
+      ].join('');
+      list.appendChild(div);
+    });
+    document.getElementById('empty').style.display = count ? 'none' : 'block';
+  }
+
+  document.getElementById('btnFilter').addEventListener('click', render);
+  document.getElementById('btnReset').addEventListener('click', ()=>{ sel.value=""; document.getElementById('inpCity').value=""; document.getElementById('inpQuery').value=""; render(); });
+  sel.addEventListener('change', render);
+  document.getElementById('inpCity').addEventListener('keydown', e=>{ if(e.key==='Enter') render(); });
+  document.getElementById('inpQuery').addEventListener('keydown', e=>{ if(e.key==='Enter') render(); });
+
+  render();
+</script>
+</body></html>
